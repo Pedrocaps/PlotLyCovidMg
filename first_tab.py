@@ -7,8 +7,10 @@ def first_tab() -> html.Div:
         id='tab_1_container',
         children=[
             html.Div(
+                children=div_titulo()
+            ),
+            html.Div(
                 children=[
-                    html.H1("Painel", style={'text-align': 'center'}),
                     html.Div(
                         className="outer_div",
                         children=[
@@ -25,10 +27,51 @@ def first_tab() -> html.Div:
                 ]
             ),
             html.Div(
-                children=div_top_progressao()
+                children=[
+                    html.Div(
+                        className="outer_div",
+                        children=[
+                            html.Div(
+                                className='container one-half column',
+                                children=div_top_progressao()
+                            ),
+                            html.Div(
+                                className='container one-half column',
+                                children=div_mapa()
+                            )
+                        ]
+                    )
+                ]
             )
         ]
     )
+
+
+def div_mapa() -> list:
+    return [
+        html.H1("Distribuição", style={'text-align': 'center'}),
+        html.Div(
+            children=[
+                dcc.Graph(id='dist_geo', figure={})
+            ]
+        )
+    ]
+
+
+def div_titulo() -> list:
+    return [
+        html.H1(id="out_titulo", style={'text-align': 'center'}),
+        dcc.Dropdown(id="drpd_tipo_geo",
+                     options=[
+                         {'label': 'Confirmados', 'value': 'confirmado'},
+                         {'label': 'Obitos', 'value': 'obito'},
+                         {'label': 'Recuperados', 'value': 'recuperado'},
+                         {'label': 'Internados', 'value': 'internado'}
+                     ],
+                     multi=False,
+                     value="confirmado"
+                     )
+    ]
 
 
 def div_top_num_casos() -> list:
@@ -44,7 +87,7 @@ def div_top_num_casos() -> list:
                         html.Div(
                             className="filter_local",
                             children=[
-                                html.P('Slides from x to y', style={'text-align': 'center'}),
+                                html.P('Arraste para top x a top y', style={'text-align': 'center'}),
                                 dcc.RangeSlider(
                                     id='slider_top',
                                     min=1,

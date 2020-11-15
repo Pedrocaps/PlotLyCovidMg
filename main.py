@@ -1,14 +1,15 @@
-import pandas as pd
-import numpy as np
-import plotly.express as px  # (version 4.7.0)
-import plotly.graph_objects as go
-
 import dash  # (version 1.12.0) pip install dash
 import dash_core_components as dcc
 import dash_html_components as html
+import pandas as pd
+import plotly.express as px  # (version 4.7.0)
+import plotly.graph_objects as go
 from dash.dependencies import Input, Output
 
 import first_tab
+from data_obj import EnumType
+from data_obj import SingletonDadosCoord
+from data_obj import SingletonDadosCovid
 
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
@@ -19,36 +20,22 @@ CODIGO_IBGE = 'CodigoIBGE'
 URS = 'URS'
 MICRO = 'Micro'
 MACRO = 'Macro'
-
-
-def get_df() -> pd.DataFrame:
-    return pd.read_csv("covid_mg.csv", delimiter=';')
-
+LAT = 'LATITUDE'
+LON = 'LONGITUDE'
 
 # ------------------------------------------------------------------------------
 # Import and clean data (importing csv into pandas)
-df_base = get_df()
-# drop nan values from dataframe
-df_base = df_base.dropna(axis=0)
-
-df = df_base.copy()
-
-df = df.drop(['CodigoIBGE', 'URS', 'Micro', 'Macro'], axis=1)
-df['DATA'] = pd.to_datetime(df[DATA], dayfirst=True)
-
-df = df.groupby([MUNICIPIO, DATA])[[NUM_CASOS]].sum()
-df = df.groupby(MUNICIPIO).cumsum()
-df.reset_index(inplace=True)
-
-df = df[df[DATA] < '2020-08-01']
 
 colors = {
     'background': '#252e3f',
     'text': '#7fafdf'
 }
 
+df_class = SingletonDadosCovid(EnumType.CONFIRMADOS)
+
 
 def second_div() -> html.Div:
+    df_base = df_class.get_dados_covid()
     df2 = df_base.groupby([MUNICIPIO])[[NUM_CASOS]].sum().sort_values(NUM_CASOS, ascending=False)
     df2 = df2.head(10)
     df2.reset_index(inplace=True)
@@ -70,7 +57,8 @@ def second_div() -> html.Div:
 
 
 def third_graph() -> html.Div:
-    dff = df.copy().sort_values(NUM_CASOS, ascending=False)
+    df_base = df_class.get_dados_covid()
+    dff = df_base.copy().sort_values(NUM_CASOS, ascending=False)
     top_10 = dff[MUNICIPIO].unique()[:10]
     dff = dff[dff[MUNICIPIO].isin(top_10)]
 
@@ -104,38 +92,44 @@ def third_graph() -> html.Div:
 second = second_div()
 third = third_graph()
 
-app.layout = html.Div(
-    id='root',
-    children=[
-        dcc.Tabs(
-            id="tabs-with-classes",
-            value='tab-2',
-            parent_className='custom-tabs',
-            className='custom-tabs-container',
-            children=[
-                dcc.Tab(
-                    label='Tab one',
-                    value='tab-1',
-                    className='custom-tab',
-                    selected_className='custom-tab--selected'
-                ),
-                dcc.Tab(
-                    label='Tab two',
-                    value='tab-2',
-                    className='custom-tab',
-                    selected_className='custom-tab--selected'
-                ),
-                dcc.Tab(
-                    label='Tab three, multiline',
-                    value='tab-3', className='custom-tab',
-                    selected_className='custom-tab--selected'
-                ),
-            ]
-        ),
 
-        html.Div(id='tabs-content-classes')
-    ],
-)
+def get_app_layout():
+    return \
+        html.Div(
+            id='root',
+            children=[
+                dcc.Tabs(
+                    id="tabs-with-classes",
+                    value='tab-2',
+                    parent_className='custom-tabs',
+                    className='custom-tabs-container',
+                    children=[
+                        dcc.Tab(
+                            label='Perfil Geográfico MG',
+                            value='tab-1',
+                            className='custom-tab',
+                            selected_className='custom-tab--selected'
+                        ),
+                        dcc.Tab(
+                            label='Tab two',
+                            value='tab-2',
+                            className='custom-tab',
+                            selected_className='custom-tab--selected'
+                        ),
+                        dcc.Tab(
+                            label='Tab three, multiline',
+                            value='tab-3', className='custom-tab',
+                            selected_className='custom-tab--selected'
+                        ),
+                    ]
+                ),
+
+                html.Div(id='tabs-content-classes')
+            ],
+        )
+
+
+app.layout = get_app_layout()
 
 
 @app.callback(Output('tabs-content-classes', 'children'),
@@ -164,10 +158,11 @@ def render_content(tab):
 
 )
 def update_graph(slctd_mun, slctd_urs, slctd_micro, slctd_macro):
+    df_base = df_class.get_dados_covid()
     df_graph = df_base.copy().drop(['CodigoIBGE'], axis=1).sort_values(DATA, ascending=True)
-    df_graph = df_graph[df_graph[DATA] < '2020-08-01']
 
     df_graph['DATA'] = pd.to_datetime(df_graph[DATA], dayfirst=True).dt.month
+    distinct_months = sorted(df_graph[DATA].unique().tolist())
 
     list_mun = df_graph[MUNICIPIO].unique().tolist()
     list_urs = df_graph[URS].unique().tolist()
@@ -190,7 +185,6 @@ def update_graph(slctd_mun, slctd_urs, slctd_micro, slctd_macro):
 
         df_graph = df_graph.groupby([URS, DATA])[[NUM_CASOS]].sum()
         df_graph = df_graph.groupby(URS).cumsum()
-
     elif slctd_micro:
         df_graph = df_graph[df_graph[MICRO] == slctd_micro]
         list_urs = df_graph[URS][~df_graph[URS].isna()].unique().tolist()
@@ -199,7 +193,6 @@ def update_graph(slctd_mun, slctd_urs, slctd_micro, slctd_macro):
 
         df_graph = df_graph.groupby([MICRO, DATA])[[NUM_CASOS]].sum()
         df_graph = df_graph.groupby(MICRO).cumsum()
-
     elif slctd_macro:
         df_graph = df_graph[df_graph[MACRO] == slctd_macro]
         list_urs = df_graph[URS][~df_graph[URS].isna()].unique().tolist()
@@ -208,7 +201,6 @@ def update_graph(slctd_mun, slctd_urs, slctd_micro, slctd_macro):
 
         df_graph = df_graph.groupby([MACRO, DATA])[[NUM_CASOS]].sum()
         df_graph = df_graph.groupby(MACRO).cumsum()
-
     else:
         df_graph = df_graph.groupby([DATA])[[NUM_CASOS]].sum()
         df_graph = df_graph.groupby(DATA).cumsum()
@@ -229,11 +221,11 @@ def update_graph(slctd_mun, slctd_urs, slctd_micro, slctd_macro):
     fig1.update_layout(
         xaxis=dict(
             tickmode='array',
-            tickvals=[3, 4, 5, 6, 7, 8],
+            tickvals=distinct_months,
             title='Mës'
         ),
         yaxis=dict(
-            title='Qtd. Infectados'
+            title='Quantidade'
         ),
         plot_bgcolor=colors['background'],
         paper_bgcolor=colors['background'],
@@ -250,8 +242,8 @@ def update_graph(slctd_mun, slctd_urs, slctd_micro, slctd_macro):
     [Input(component_id='slider_top', component_property='value')]
 )
 def update_top_num(slide_slct):
+    df_base = df_class.get_dados_covid()
     df2 = df_base.copy()
-    df2 = df2[df2[DATA] < '2020-08-01']
 
     df2 = df2.groupby([MUNICIPIO])[[NUM_CASOS]].sum().sort_values(NUM_CASOS, ascending=False)
 
@@ -274,7 +266,7 @@ def update_top_num(slide_slct):
             title='Municipio'
         ),
         yaxis=dict(
-            title='Qtd. Infectados'
+            title='Quantidade'
         ),
         plot_bgcolor=colors['background'],
         paper_bgcolor=colors['background'],
@@ -288,12 +280,12 @@ def update_top_num(slide_slct):
 
 @app.callback(
     Output(component_id='top_progress', component_property='figure'),
-    Input(component_id='slider_top', component_property='value')
+    [Input(component_id='slider_top', component_property='value')]
 )
-def update_progress(slctd):
+def update_progress(slide_slct):
+    df_base = df_class.get_dados_covid()
     dff = df_base.copy().sort_values(NUM_CASOS, ascending=False)[[MUNICIPIO, DATA, NUM_CASOS]]
     dff[DATA] = pd.to_datetime(dff[DATA], dayfirst=True)
-    dff = dff[dff[DATA] < '2020-08-01']
 
     top_10 = dff[MUNICIPIO].unique()[:10]
     dff = dff[dff[MUNICIPIO].isin(top_10)]
@@ -326,6 +318,64 @@ def update_progress(slctd):
     )
 
     return lines_plt
+
+
+@app.callback(
+    Output(component_id='out_titulo', component_property='children'),
+    Input(component_id='drpd_tipo_geo', component_property='value')
+)
+def update_data(drop_data):
+    if drop_data == 'confirmado':
+        ret = 'Casos Confirmados'
+        df_class.change_data_source(EnumType.CONFIRMADOS)
+    elif drop_data == 'obito':
+        ret = 'Obitos'
+        df_class.change_data_source(EnumType.CONFIRMADOS)
+    elif drop_data == 'recuperado':
+        ret = 'Casos Recuperados'
+        df_class.change_data_source(EnumType.CONFIRMADOS)
+    elif drop_data == 'internado':
+        ret = 'Pessoas Internadas'
+        df_class.change_data_source(EnumType.CONFIRMADOS)
+    else:
+        ret = 'Painel'
+
+    return f'Painel {ret}'
+
+
+@app.callback(
+    Output(component_id='dist_geo', component_property='figure'),
+    Input(component_id='drpd_tipo_geo', component_property='value')
+)
+def update_geo(drop_data):
+    coord = SingletonDadosCoord().get_dados()
+    dff = df_class.get_dados_covid()
+
+    dff = dff.groupby([CODIGO_IBGE])[[NUM_CASOS]].sum().sort_values(NUM_CASOS, ascending=False)
+
+    dff.reset_index(inplace=True)
+    dff = pd.merge(dff, coord, on=CODIGO_IBGE)
+
+    center_lat = dff[LAT].mean()
+    center_lon = dff[LON].mean()
+    max = dff[NUM_CASOS].max() / 2
+    min = dff[NUM_CASOS].min()
+
+    fig = px.density_mapbox(dff, lat=LAT, lon=LON, z=NUM_CASOS, radius=30,
+                            center=dict(lat=center_lat, lon=center_lon), zoom=5,
+                            mapbox_style="stamen-terrain",
+                            range_color=[min, max])
+
+    fig.update_layout(
+        plot_bgcolor=colors['background'],
+        paper_bgcolor=colors['background'],
+        font=dict(
+            color=colors['text']
+        )
+    )
+    fig.update(layout_coloraxis_showscale=False)
+
+    return fig
 
 
 if __name__ == '__main__':

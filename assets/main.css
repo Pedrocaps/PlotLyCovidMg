@@ -17,12 +17,12 @@ body {
 }
 
 #root {
-    margin: 0;
+    margin: 0px;
 }
 
-.tab_1_container{
-    margin-left: 40px;
-    margin-right: 50px;
+#tab_1_container{
+    padding-right: 40px;
+    padding-left: 40px;
 }
 
 .graph_title{
