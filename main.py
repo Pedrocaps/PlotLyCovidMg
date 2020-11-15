@@ -101,7 +101,7 @@ def get_app_layout():
             children=[
                 dcc.Tabs(
                     id="tabs-with-classes",
-                    value='tab-2',
+                    value='tab-1',
                     parent_className='custom-tabs',
                     className='custom-tabs-container',
                     children=[
@@ -111,17 +111,17 @@ def get_app_layout():
                             className='custom-tab',
                             selected_className='custom-tab--selected'
                         ),
-                        dcc.Tab(
-                            label='Tab two',
-                            value='tab-2',
-                            className='custom-tab',
-                            selected_className='custom-tab--selected'
-                        ),
-                        dcc.Tab(
-                            label='Tab three, multiline',
-                            value='tab-3', className='custom-tab',
-                            selected_className='custom-tab--selected'
-                        ),
+                        # dcc.Tab(
+                        #     label='Tab two',
+                        #     value='tab-2',
+                        #     className='custom-tab',
+                        #     selected_className='custom-tab--selected'
+                        # ),
+                        # dcc.Tab(
+                        #     label='Tab three, multiline',
+                        #     value='tab-3', className='custom-tab',
+                        #     selected_className='custom-tab--selected'
+                        # ),
                     ]
                 ),
 
@@ -216,7 +216,8 @@ def update_graph(slctd_mun, slctd_urs, slctd_micro, slctd_macro):
     fig1 = go.Figure(go.Scatter(
         x=df_graph[DATA],
         y=df_graph[NUM_CASOS],
-        orientation='v'
+        orientation='v',
+        hovertemplate='Qtd. Casos: %{y}<extra></extra>'
     ))
 
     fig1.update_layout(
@@ -365,7 +366,9 @@ def update_geo(drop_data):
     fig = px.density_mapbox(dff, lat=LAT, lon=LON, z=NUM_CASOS, radius=30,
                             center=dict(lat=center_lat, lon=center_lon), zoom=5,
                             mapbox_style="stamen-terrain",
-                            range_color=[min, max])
+                            range_color=[min, max],
+                            hover_name='NOME_MUNICIPIO',
+                            hover_data={NUM_CASOS: True, LAT: False, LON: False})
 
     fig.update_layout(
         plot_bgcolor=colors['background'],

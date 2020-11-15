@@ -61,12 +61,13 @@ def div_mapa() -> list:
 def div_titulo() -> list:
     return [
         html.H1(id="out_titulo", style={'text-align': 'center'}),
+
         dcc.Dropdown(id="drpd_tipo_geo",
                      options=[
                          {'label': 'Confirmados', 'value': 'confirmado'},
-                         {'label': 'Obitos', 'value': 'obito'},
-                         {'label': 'Recuperados', 'value': 'recuperado'},
-                         {'label': 'Internados', 'value': 'internado'}
+                         # {'label': 'Obitos', 'value': 'obito'},
+                         # {'label': 'Recuperados', 'value': 'recuperado'},
+                         # {'label': 'Internados', 'value': 'internado'}
                      ],
                      multi=False,
                      value="confirmado"
