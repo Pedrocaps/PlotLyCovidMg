@@ -29,7 +29,7 @@ LON = 'LONGITUDE'
 
 """
 heroku login
-heroku push master
+git push heroku master
 """
 
 colors = {
