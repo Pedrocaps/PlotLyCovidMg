@@ -96,7 +96,12 @@ body {
     color: #7fafdf !important;
 }
 
-.Select--single > .Select-control .Select-value, .Select-placeholder {
+.Select--multi > .Select-control .Select-value, .Select-placeholder {
+    border: 1px solid #7fafdf !important;
+    border-radius: 4px !important;
+}
+
+.Select--single, Select--multi > .Select-control .Select-value, .Select-placeholder {
     border: 1px solid #7fafdf !important;
     border-radius: 4px !important;
 }

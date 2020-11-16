@@ -15,12 +15,16 @@ def first_tab() -> html.Div:
                         className="outer_div",
                         children=[
                             html.Div(
-                                className='container one-half column',
+                                className='container one-third column',
                                 children=div_num_casos()
                             ),
                             html.Div(
-                                className='container one-half column',
+                                className='container one-third column',
                                 children=div_top_num_casos()
+                            ),
+                            html.Div(
+                                className='container one-third column',
+                                children=div_progress_bar()
                             )
                         ]
                     )
@@ -45,6 +49,27 @@ def first_tab() -> html.Div:
             )
         ]
     )
+
+
+def div_progress_bar() -> list:
+    return [
+        html.Div(
+            children=[
+                html.H1("Progressão / Total Mensal", style={'text-align': 'center'}, className='graph_title'),
+                html.P('Escolha Municípios para remover do gráfico', style={'text-align': 'center'}),
+                html.Div(
+                    children=[dcc.Dropdown(
+                        id="todos_mun",
+                        options=[],
+                        multi=True
+                    )]
+                ),
+                html.Br(),
+
+                dcc.Graph(id='progess_tot_bar', figure={})
+            ]
+        )
+    ]
 
 
 def div_mapa() -> list:

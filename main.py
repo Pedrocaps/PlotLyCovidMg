@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.express as px  # (version 4.7.0)
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output
+from plotly.subplots import make_subplots
 
 import first_tab
 from data_obj import EnumType
@@ -385,6 +386,78 @@ def update_geo(drop_data):
     fig.update(layout_coloraxis_showscale=False)
 
     return fig
+
+
+@app.callback(
+    [Output(component_id='progess_tot_bar', component_property='figure'),
+     Output(component_id='todos_mun', component_property='options')],
+    [Input(component_id='todos_mun', component_property='value')]
+)
+def progess_tot_bar(todos_mun):
+    # Preara os dados
+    df_base = df_class.get_dados_covid()
+
+    list_mun = df_base[MUNICIPIO].unique().tolist()
+    list_dict_mun = [{"label": mun, "value": mun} for mun in sorted(list_mun)]
+
+    if todos_mun is not None:
+        df_base = df_base[~df_base[MUNICIPIO].isin(todos_mun)]
+
+    df_graph = df_base.copy().drop(['CodigoIBGE'], axis=1).sort_values(DATA, ascending=True)
+    df_graph['DATA'] = pd.to_datetime(df_graph[DATA], dayfirst=True).dt.month
+
+    dff = df_graph.copy()[[DATA, NUM_CASOS]]
+
+    # processa para o grafico
+
+    distinct_months = sorted(df_graph[DATA].unique().tolist())
+
+    df_graph = df_graph.groupby([DATA])[[NUM_CASOS]].sum()
+    df_graph = df_graph.groupby(DATA).cumsum()
+
+    df_graph.reset_index(inplace=True)
+
+    first_g = go.Bar(
+        x=df_graph[DATA],
+        y=df_graph[NUM_CASOS],
+        orientation='v',
+        hovertemplate='Qtd. Casos: %{y}<extra></extra>',
+        name="Total no mês"
+    )
+
+    dff = dff.sort_values(DATA, ascending=True)
+    dff = dff.groupby([DATA]).sum()\
+        .cumsum()
+    dff.reset_index(inplace=True)
+
+    secod_g = go.Scatter(
+        x=dff[DATA],
+        y=dff[NUM_CASOS],
+        orientation='v',
+        hovertemplate='Qtd. Casos: %{y}<extra></extra>',
+        name="Acumulado"
+    )
+
+    layout = go.Layout(
+        xaxis=dict(
+            tickmode='array',
+            tickvals=distinct_months,
+            title='Mës'
+        ),
+        yaxis=dict(
+            title='Quantidade'
+        ),
+        plot_bgcolor=colors['background'],
+        paper_bgcolor=colors['background'],
+        font=dict(
+            color=colors['text']
+        )
+    )
+
+    data = [first_g, secod_g]
+    fig = go.Figure(data=data, layout=layout)
+
+    return fig, list_dict_mun
 
 
 if __name__ == '__main__':
