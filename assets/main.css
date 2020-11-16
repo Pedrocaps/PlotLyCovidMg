@@ -103,8 +103,15 @@ body {
 /* Dropdown
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
-/* For devices larger than 550px */
-@media (max-width: 550px) {
+/* For mobile */
+@media all
+  and (min-device-width: 250px)
+  and (max-device-width: 900px){
+
+        .outer_div{
+            display: block;
+    }
+
   .container {
     width: 80%; }
   .column,
@@ -114,15 +121,18 @@ body {
   .columns:first-child {
     margin-left: 0; }
 
-    .one-third.column               { width: 95%; }
+  .one-third.column               { width: 95%; }
   .two-thirds.column              { width: 95%; }
 
   .one-half.column                { width: 95%; }
 
 }
 
-/* For devices larger than 550px */
-@media (min-width: 550px) {
+/* For pc */
+@media not all
+  and (min-device-width: 250px)
+  and (max-device-width: 900px){
+
   .container {
     width: 80%; }
   .column,
