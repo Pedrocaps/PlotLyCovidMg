@@ -370,7 +370,7 @@ def update_geo(drop_data):
 
     fig = px.density_mapbox(dff, lat=LAT, lon=LON, z=NUM_CASOS, radius=30,
                             center=dict(lat=center_lat, lon=center_lon), zoom=5,
-                            mapbox_style="stamen-terrain",
+                            mapbox_style="stamen-toner",
                             range_color=[min, max],
                             hover_name='NOME_MUNICIPIO',
                             hover_data={NUM_CASOS: True, LAT: False, LON: False})
