@@ -27,6 +27,11 @@ LON = 'LONGITUDE'
 # ------------------------------------------------------------------------------
 # Import and clean data (importing csv into pandas)
 
+"""
+heroku login
+heroku push master
+"""
+
 colors = {
     'background': '#252e3f',
     'text': '#7fafdf'
