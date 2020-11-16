@@ -78,7 +78,6 @@ def div_titulo() -> list:
 def div_top_num_casos() -> list:
     return [
         html.Div(
-            className='grid_first_graph',
             children=[
                 html.H1("Top Num. de Casos", style={'text-align': 'center'}, className='graph_title'),
 
