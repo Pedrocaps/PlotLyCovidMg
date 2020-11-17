@@ -182,35 +182,35 @@ def update_graph(slctd_mun, slctd_urs, slctd_micro, slctd_macro):
         list_micro = df_graph[MICRO].unique().tolist()
         list_macro = df_graph[MACRO].unique().tolist()
 
+        df_graph.sort_values([MUNICIPIO, DATA], ascending=True, inplace=True)
         df_graph = df_graph.groupby([MUNICIPIO, DATA])[[NUM_CASOS]].sum()
-        df_graph = df_graph.groupby(MUNICIPIO).cumsum()
     elif slctd_urs:
         df_graph = df_graph[df_graph[URS] == slctd_urs]
         list_mun = df_graph[MUNICIPIO].unique().tolist()
         list_micro = df_graph[MICRO].unique().tolist()
         list_macro = df_graph[MACRO].unique().tolist()
 
+        df_graph.sort_values([URS, DATA], ascending=True, inplace=True)
         df_graph = df_graph.groupby([URS, DATA])[[NUM_CASOS]].sum()
-        df_graph = df_graph.groupby(URS).cumsum()
     elif slctd_micro:
         df_graph = df_graph[df_graph[MICRO] == slctd_micro]
         list_urs = df_graph[URS][~df_graph[URS].isna()].unique().tolist()
         list_mun = df_graph[MUNICIPIO].unique().tolist()
         list_macro = df_graph[MACRO].unique().tolist()
 
+        df_graph.sort_values([MICRO, DATA], ascending=True, inplace=True)
         df_graph = df_graph.groupby([MICRO, DATA])[[NUM_CASOS]].sum()
-        df_graph = df_graph.groupby(MICRO).cumsum()
     elif slctd_macro:
         df_graph = df_graph[df_graph[MACRO] == slctd_macro]
         list_urs = df_graph[URS][~df_graph[URS].isna()].unique().tolist()
         list_mun = df_graph[MUNICIPIO].unique().tolist()
         list_micro = df_graph[MICRO].unique().tolist()
 
+        df_graph.sort_values([MACRO, DATA], ascending=True, inplace=True)
         df_graph = df_graph.groupby([MACRO, DATA])[[NUM_CASOS]].sum()
-        df_graph = df_graph.groupby(MACRO).cumsum()
     else:
+        df_graph.sort_values([DATA], ascending=True, inplace=True)
         df_graph = df_graph.groupby([DATA])[[NUM_CASOS]].sum()
-        df_graph = df_graph.groupby(DATA).cumsum()
 
     list_dict_mun = [{"label": mun, "value": mun} for mun in sorted(list_mun)]
     list_dict_urs = [{"label": mun, "value": mun} for mun in sorted(list_urs)]
