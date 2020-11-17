@@ -133,7 +133,7 @@ def get_path_date():
 def refresh_data():
     try:
         ret, date = cdw.get_data_from_web()
-        df_class.change_data_source(EnumType.CONFIRMADOS)
+        df_class.update_data()
 
         return html.Div(
             [html.H1(ret), html.H1(date)]

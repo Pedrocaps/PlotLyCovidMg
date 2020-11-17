@@ -33,17 +33,21 @@ class SingletonDadosCovid:
 
     def get_dados_covid(self) -> pd.DataFrame:
         if self.df is None:
-            for i in range(0,2):
+            for i in range(0, 2):
                 try:
                     df_base = pd.read_csv(self.path, delimiter=self.delimiter, encoding='utf-8',
                                           dtype={'CodigoIBGE': str})
                     self.default_path = self.path
                     self.df = df_base
+                    break
 
                 except FileNotFoundError:
                     try:
-                        df_base = self.get_from_default()
+                        path = 'covid_mg.csv'
+                        df_base = self.get_from_default(path)
+                        self.default_path = path
                         self.df = df_base
+                        break
 
                     except FileNotFoundError:
                         covid_data_web.get_data_from_web()
@@ -60,9 +64,12 @@ class SingletonDadosCovid:
             self.path = enum_type.value
             self.df = None
 
-    def get_from_default(self):
+    def update_data(self):
+        self.df = None
+
+    def get_from_default(self, path):
         try:
-            self.default_path = 'covid_mg.csv'
+            self.default_path = path
             df_base = pd.read_csv('covid_mg.csv', delimiter=';', encoding='utf-8',
                                   dtype={'CodigoIBGE': str})
 
