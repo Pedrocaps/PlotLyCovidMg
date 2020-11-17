@@ -5,12 +5,12 @@ import pandas as pd
 import plotly.express as px  # (version 4.7.0)
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output
-from plotly.subplots import make_subplots
 
 import first_tab
 from data_obj import EnumType
 from data_obj import SingletonDadosCoord
 from data_obj import SingletonDadosCovid
+import covid_data_web as cdw
 
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
 server = app.server
@@ -100,6 +100,48 @@ second = second_div()
 third = third_graph()
 
 
+def get_all_links():
+    return html.Div([
+        # represents the URL bar, doesn't render anything
+        dcc.Location(id='url', refresh=False),
+
+        # content will be rendered in this element
+        html.Div(id='page-content')
+    ])
+
+
+@app.callback(dash.dependencies.Output('page-content', 'children'),
+              [dash.dependencies.Input('url', 'pathname')])
+def display_page(pathname):
+    if pathname == '/refresh':
+        return refresh_data()
+    elif pathname == '/version':
+        return get_path_date()
+    return get_app_layout()
+
+
+def get_path_date():
+    try:
+        ret, date = cdw.get_path_date(df_class.default_path)
+        df_class.change_data_source(EnumType.CONFIRMADOS)
+
+        return html.Div([html.H1(ret),html.H1(date)])
+    except Exception as err:
+        return html.H1(f'{str(err)} - Lendo de : {df_class.default_path}')
+
+
+def refresh_data():
+    try:
+        ret, date = cdw.get_data_from_web()
+        df_class.change_data_source(EnumType.CONFIRMADOS)
+
+        return html.Div(
+            [html.H1(ret), html.H1(date)]
+        )
+    except Exception as err:
+        return html.H1(str(err))
+
+
 def get_app_layout():
     return \
         html.Div(
@@ -136,7 +178,7 @@ def get_app_layout():
         )
 
 
-app.layout = get_app_layout()
+app.layout = get_all_links
 
 
 @app.callback(Output('tabs-content-classes', 'children'),
@@ -426,7 +468,7 @@ def progess_tot_bar(todos_mun):
     )
 
     dff = dff.sort_values(DATA, ascending=True)
-    dff = dff.groupby([DATA]).sum()\
+    dff = dff.groupby([DATA]).sum() \
         .cumsum()
     dff.reset_index(inplace=True)
 
