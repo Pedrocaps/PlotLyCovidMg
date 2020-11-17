@@ -66,6 +66,7 @@ class SingletonDadosCovid:
 
     def update_data(self):
         self.df = None
+        self.get_dados_covid()
 
     def get_from_default(self, path):
         try:

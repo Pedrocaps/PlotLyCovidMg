@@ -11,6 +11,7 @@ from data_obj import EnumType
 from data_obj import SingletonDadosCoord
 from data_obj import SingletonDadosCovid
 import covid_data_web as cdw
+from covid_data_web import GetData
 
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
 server = app.server
@@ -39,6 +40,7 @@ colors = {
 }
 
 df_class = SingletonDadosCovid(EnumType.CONFIRMADOS)
+get_data_class = GetData()
 
 
 def second_div() -> html.Div:
@@ -117,26 +119,35 @@ def display_page(pathname):
         return refresh_data()
     elif pathname == '/version':
         return get_path_date()
+    elif pathname == '/ping':
+        if get_data_class.get_process_status():
+            return html.H1(f"Downloading..")
+        else:
+            return html.H1(f"Process not running")
+    elif pathname == '/update':
+        df_class.update_data()
+        return 'Source changed'
+
     return get_app_layout()
 
 
 def get_path_date():
     try:
         ret, date = cdw.get_path_date(df_class.default_path)
-        df_class.change_data_source(EnumType.CONFIRMADOS)
-
-        return html.Div([html.H1(ret),html.H1(date)])
+        return html.Div([html.H1(ret), html.H1(date)])
     except Exception as err:
         return html.H1(f'{str(err)} - Lendo de : {df_class.default_path}')
 
 
 def refresh_data():
     try:
-        ret, date = cdw.get_data_from_web()
-        df_class.update_data()
+        if get_data_class.get_process_status():
+            ret, date = "Downloading..", "Wait....."
+        else:
+            ret, date = get_data_class.start_process()
 
         return html.Div(
-            [html.H1(ret), html.H1(date)]
+            [html.H1(ret), html.H1(date), html.Br(), html.H1(cdw.message)]
         )
     except Exception as err:
         return html.H1(str(err))
