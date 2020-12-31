@@ -1,12 +1,11 @@
+import pathlib
 from enum import Enum
 
 import pandas as pd
-import covid_data_web
-
 
 
 class EnumType(Enum):
-    CONFIRMADOS = covid_data_web.CSV_PATH
+    CONFIRMADOS = "dados\\covid_mg_31_12.csv"
     OBITOS = "covid_mg_obitos.csv"
     RECUPERADOS = "covid_mg_recuperados.csv"
     INTERNADOS = "covid_mg_internados.csv"
@@ -24,7 +23,7 @@ def get_enum_by_name(drop_data) -> EnumType:
 
 
 class SingletonDadosCovid:
-    def __init__(self, enum_type, delimiter=','):
+    def __init__(self, enum_type, delimiter=';'):
         self.df = None
         self.enum_type = enum_type
         self.path = enum_type.value
@@ -32,30 +31,11 @@ class SingletonDadosCovid:
         self.default_path = ""
 
     def get_dados_covid(self) -> pd.DataFrame:
-        if self.df is None:
-            for i in range(0, 2):
-                try:
-                    df_base = pd.read_csv(self.path, delimiter=self.delimiter, encoding='utf-8',
-                                          dtype={'CodigoIBGE': str})
-                    self.default_path = self.path
-                    self.df = df_base
-                    break
-
-                except FileNotFoundError:
-                    try:
-                        path = 'covid_mg.csv'
-                        df_base = self.get_from_default(path)
-                        self.default_path = path
-                        self.df = df_base
-                        break
-
-                    except FileNotFoundError:
-                        covid_data_web.get_data_from_web()
-
-            return self.df.dropna(axis=0)
-
-        else:
-            return self.df.dropna(axis=0)
+        df_base = pd.read_csv(self.path, delimiter=self.delimiter, encoding='utf-8',
+                              dtype={'CodigoIBGE': str})
+        self.default_path = self.path
+        self.df = df_base
+        return self.df.dropna(axis=0)
 
     def change_data_source(self, enum_type):
         if enum_type == self.enum_type:
@@ -63,22 +43,6 @@ class SingletonDadosCovid:
         else:
             self.path = enum_type.value
             self.df = None
-
-    def update_data(self):
-        self.df = None
-        self.get_dados_covid()
-
-    def get_from_default(self, path):
-        try:
-            self.default_path = path
-            df_base = pd.read_csv('covid_mg.csv', delimiter=';', encoding='utf-8',
-                                  dtype={'CodigoIBGE': str})
-
-            # drop nan values from dataframe
-            return df_base.dropna(axis=0)
-
-        except FileNotFoundError:
-            raise
 
 
 class SingletonDadosCoord:
@@ -99,3 +63,25 @@ class SingletonDadosCoord:
             return df_base.dropna(axis=0)
         else:
             return self.df
+
+
+def get_all_files_covid() -> list:
+    lista_arq = []
+    for p in pathlib.Path('dados').iterdir():
+        if p.is_file():
+            lista_arq.append(p)
+
+    lista_arq = [{"label": f"{str(arq).split('_')[2]}/{str(arq).split('_')[3][:2]}",
+                  "value": str(arq)} for arq in sorted(lista_arq, reverse=True)]
+
+    return lista_arq
+
+
+def get_dados_from_list(todos_mun):
+    df_list = []
+    for arq in todos_mun:
+        df_base = pd.read_csv(arq, delimiter=';', encoding='utf-8',
+                              dtype={'CodigoIBGE': str})
+        df_list.append(df_base.dropna(axis=0))
+
+    return df_list

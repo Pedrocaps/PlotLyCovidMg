@@ -1,6 +1,6 @@
 import dash_core_components as dcc
 import dash_html_components as html
-
+from data_obj import get_all_files_covid
 
 def first_tab() -> html.Div:
     return html.Div(
@@ -46,9 +46,48 @@ def first_tab() -> html.Div:
                         ]
                     )
                 ]
+            ),
+            html.Div(
+                children=[
+                    html.Div(
+                        className="outer_div",
+                        children=[
+                            html.Div(
+                                className='container',
+                                children=div_por_data()
+                            )
+                        ]
+                    )
+                ]
             )
         ]
     )
+
+
+def div_por_data():
+    return [
+        html.Div(
+            children=[
+                html.H1("Número de Casos por Data", style={'text-align': 'center'}, className='graph_title'),
+
+                html.Div(
+                    className="grid_filter_graph",
+                    children=[
+                        html.Div(
+                            className="filter_local",
+                            children=[
+                                html.P('Data do Arquivo'),
+                                dcc.Dropdown(id="drpd_data",
+                                             options=get_all_files_covid(),
+                                             multi=True,
+                                             placeholder="Mais Atual",
+                                             )]),
+                    ]),
+
+                dcc.Graph(id='grafico_por_data_arquivo', figure={})
+            ]
+        )
+    ]
 
 
 def div_progress_bar() -> list:

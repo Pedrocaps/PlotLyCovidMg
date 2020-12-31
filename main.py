@@ -10,8 +10,7 @@ import first_tab
 from data_obj import EnumType
 from data_obj import SingletonDadosCoord
 from data_obj import SingletonDadosCovid
-import covid_data_web as cdw
-from covid_data_web import GetData
+from data_obj import get_dados_from_list
 
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
 server = app.server
@@ -40,7 +39,6 @@ colors = {
 }
 
 df_class = SingletonDadosCovid(EnumType.CONFIRMADOS)
-get_data_class = GetData()
 
 
 def second_div() -> html.Div:
@@ -115,42 +113,7 @@ def get_all_links():
 @app.callback(dash.dependencies.Output('page-content', 'children'),
               [dash.dependencies.Input('url', 'pathname')])
 def display_page(pathname):
-    if pathname == '/refresh':
-        return refresh_data()
-    elif pathname == '/version':
-        return get_path_date()
-    elif pathname == '/ping':
-        if get_data_class.get_process_status():
-            return html.H1(f"Downloading..")
-        else:
-            return html.H1(f"Process not running")
-    elif pathname == '/update':
-        df_class.update_data()
-        return 'Source changed'
-
     return get_app_layout()
-
-
-def get_path_date():
-    try:
-        ret, date = cdw.get_path_date(df_class.default_path)
-        return html.Div([html.H1(ret), html.H1(date)])
-    except Exception as err:
-        return html.H1(f'{str(err)} - Lendo de : {df_class.default_path}')
-
-
-def refresh_data():
-    try:
-        if get_data_class.get_process_status():
-            ret, date = "Downloading..", "Wait....."
-        else:
-            ret, date = get_data_class.start_process()
-
-        return html.Div(
-            [html.H1(ret), html.H1(date), html.Br(), html.H1(cdw.message)]
-        )
-    except Exception as err:
-        return html.H1(str(err))
 
 
 def get_app_layout():
@@ -511,6 +474,60 @@ def progess_tot_bar(todos_mun):
     fig = go.Figure(data=data, layout=layout)
 
     return fig, list_dict_mun
+
+
+@app.callback(
+    Output(component_id='grafico_por_data_arquivo', component_property='figure'),
+    [Input(component_id='drpd_data', component_property='value')]
+)
+def grafico_por_data_arquivo(todos_mun):
+    fig_list = []
+
+    if todos_mun:
+        df_base_list = get_dados_from_list(todos_mun)
+    else:
+        df_base_list = [df_class.get_dados_covid()]
+
+    for df_base in df_base_list:
+        df_base.drop(['CodigoIBGE'], axis=1).sort_values(DATA, ascending=True)
+        df_base['DATA'] = pd.to_datetime(df_base[DATA], dayfirst=True).dt.month
+
+        distinct_months = sorted(df_base[DATA].unique().tolist())
+
+        df_base.sort_values([DATA], ascending=True, inplace=True)
+        df_base = df_base.groupby([DATA])[[NUM_CASOS]].sum()
+
+        df_base.reset_index(inplace=True)
+
+        fig1 = go.Scatter(
+            x=df_base[DATA],
+            y=df_base[NUM_CASOS],
+            orientation='v',
+            hovertemplate='Qtd. Casos: %{y}<extra></extra>',
+            name="Acumulado"
+        )
+
+        fig_list.append(fig1)
+
+    layout = go.Layout(
+        xaxis=dict(
+            tickmode='array',
+            tickvals=distinct_months,
+            title='Mës'
+        ),
+        yaxis=dict(
+            title='Quantidade'
+        ),
+        plot_bgcolor=colors['background'],
+        paper_bgcolor=colors['background'],
+        font=dict(
+            color=colors['text']
+        )
+    )
+
+    fig = go.Figure(data=fig_list, layout=layout)
+
+    return fig
 
 
 if __name__ == '__main__':
