@@ -1,11 +1,13 @@
 import pathlib
+import os
 from enum import Enum
 
 import pandas as pd
 
 
 class EnumType(Enum):
-    CONFIRMADOS = ".\\dados\\covid_mg_31_12.csv"
+    path = os.path.dirname(__file__)
+    CONFIRMADOS = f"{path}\\dados\\covid_mg_31_12.csv"
     OBITOS = "covid_mg_obitos.csv"
     RECUPERADOS = "covid_mg_recuperados.csv"
     INTERNADOS = "covid_mg_internados.csv"
