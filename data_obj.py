@@ -7,7 +7,7 @@ import pandas as pd
 
 class EnumType(Enum):
     path = os.path.dirname(__file__)
-    CONFIRMADOS = f"{path}\\dados\\covid_mg_31_12.csv"
+    CONFIRMADOS = os.path.join(path, 'dados', 'covid_mg_31_12.csv') # f"{path}\\dados\\covid_mg_31_12.csv"
     OBITOS = "covid_mg_obitos.csv"
     RECUPERADOS = "covid_mg_recuperados.csv"
     INTERNADOS = "covid_mg_internados.csv"
