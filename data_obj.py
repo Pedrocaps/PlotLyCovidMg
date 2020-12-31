@@ -5,7 +5,7 @@ import pandas as pd
 
 
 class EnumType(Enum):
-    CONFIRMADOS = "dados\\covid_mg_31_12.csv"
+    CONFIRMADOS = ".\\dados\\covid_mg_31_12.csv"
     OBITOS = "covid_mg_obitos.csv"
     RECUPERADOS = "covid_mg_recuperados.csv"
     INTERNADOS = "covid_mg_internados.csv"
